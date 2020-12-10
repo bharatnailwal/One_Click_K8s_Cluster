@@ -30,5 +30,5 @@ kubeadm join 192.168.200.23:6443 --token qwb98v.mtfn7e77ny5sh6km     --discovery
 NOTE: you can also generate this token from master node:
 cmd - kubeadm token create --print-join-command
 
-![Screenshot](images/screenshot1.png)
+![Screenshot](screenshot1.PNG)
 
