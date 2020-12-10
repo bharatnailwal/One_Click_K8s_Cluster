@@ -33,3 +33,6 @@ cmd - kubeadm token create --print-join-command
 
 ![Screenshot](screenshot1.PNG)
 
+![Screenshot](screenshot3.PNG)
+
+![Screenshot](screenshot2.PNG)
