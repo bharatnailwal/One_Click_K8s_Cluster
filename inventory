@@ -1,0 +1,5 @@
+[master]
+192.168.200.23 server_hostname=master-node
+[worker]
+192.168.200.24 server_hostname=worker-node-1
+192.168.200.25 server_hostname=worker-node-2

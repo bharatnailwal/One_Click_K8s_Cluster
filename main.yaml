@@ -1,0 +1,111 @@
+- name: K8s Cluster
+  gather_facts: false
+  hosts: all
+  user: root
+  become: true
+  become_user: root
+  tasks:
+    - name: inventory name to hostname
+      hostname:
+        name: "{{ server_hostname }}"
+
+    - name: stop and disable firewalld.
+      service:
+        name: firewalld
+        state: stopped
+        enabled: False
+
+    - name: deploy resolv.conf template
+      template:
+        src: resolv.conf.j2
+        dest: /etc/resolv.conf
+        owner: root
+        group: root
+        mode: 0644
+
+    - name: Generate /tmp/prerequisite.sh
+      template:
+        src=prerequisite.sh
+        dest=/tmp/prerequisite.sh
+        mode=a+x
+        
+    - name: Generate /tmp/directory-master.sh
+      when: inventory_hostname in groups['master']
+      template:
+        src=directory-master.sh
+        dest=/tmp/directory-master.sh
+        mode=a+x
+    
+    - name: Copy Calico CNI
+      template:
+        src=calico.yaml.j2
+        dest=/tmp/calico.yaml
+
+    - name: Run prerequisite.sh
+      shell:
+        cmd: /usr/bin/bash /tmp/prerequisite.sh
+
+    - name: Generate /etc/hosts file
+      template:
+        src=hosts.j2
+        dest=/etc/hosts
+
+    - name: Generate K8s repo 
+      template:
+        src=kubernetes.repo.j2
+        dest=/etc/yum.repos.d/kubernetes.repo
+
+    - name: Install a list of packages with a list variable
+      yum:
+       name: "{{ packages }}"
+       state: present
+      vars:
+        packages:
+        - 'yum-utils'
+        - 'device-mapper-persistent-data'
+        - 'lvm2'
+        - 'docker'
+        - 'kubelet'
+        - 'kubeadm'
+        - 'kubectl'
+
+    - name: Start services listed under with_items 
+      systemd:
+        name: "{{ item }}"
+        state: started
+        enabled: yes
+        daemon_reload: yes
+      with_items:
+        - 'docker'
+        - 'kubelet'
+      
+    - name: Reload systemd daemon 
+      when: inventory_hostname in groups['master']
+      shell:
+        cmd: systemctl daemon-reload ; systemctl restart docker kubelet
+
+    - name: Run directory-master.sh
+      when: inventory_hostname in groups['master']
+      shell:
+        cmd: /usr/bin/bash /tmp/directory-master.sh    
+          
+    - name: Apply Calico CNI
+      when: inventory_hostname in groups['master']
+      shell:
+        cmd: kubectl apply -f /tmp/calico.yaml
+
+    - name: shell command
+      when: inventory_hostname in groups['master']
+      shell:
+        cmd: kubeadm token create --print-join-command
+      register: myshell_output
+    - debug: msg="{{ myshell_output.stdout }}"
+
+    #   # local_command:
+    #   #   copy content="{{ myshell_output.stdout }}" dest="kubeadm-join-token"    
+    # - name: shell command
+    #   when: inventory_hostname in groups['worker']
+    #   shell:
+    #     cmd: 
+    #   register: myshell_output
+    # - debug: msg="{{ myshell_output.stdout }}"
