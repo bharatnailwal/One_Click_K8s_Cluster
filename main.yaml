@@ -100,12 +100,3 @@
         cmd: kubeadm token create --print-join-command
       register: myshell_output
     - debug: msg="{{ myshell_output.stdout }}"
-
-    #   # local_command:
-    #   #   copy content="{{ myshell_output.stdout }}" dest="kubeadm-join-token"    
-    # - name: shell command
-    #   when: inventory_hostname in groups['worker']
-    #   shell:
-    #     cmd: 
-    #   register: myshell_output
-    # - debug: msg="{{ myshell_output.stdout }}"
