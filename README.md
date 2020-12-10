@@ -1,5 +1,6 @@
 # One_Click_K8s_Cluster
 With this we can easily setup 3 node Kubernetes cluster on a go
+OS -  Centos-7
 
 STEP 1 - make sure you have ansible installed on your device and all the nodes are password less [Key based Auth].
 
